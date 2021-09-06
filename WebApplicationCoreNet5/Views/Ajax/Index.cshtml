@@ -1,0 +1,174 @@
+﻿@{
+    ViewData["Title"] = "Ajax Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome Ajax</h1>
+</div>
+
+<section id="mainTeachers">
+    Load ...
+</section>
+
+<section id="newTeacher">
+    <input type="text" id="newTeacherName" />
+    <input type="button" id="btnCreate" />
+</section>
+
+
+<script>
+
+    function serverResponseAddTeacher(res) {
+        console.log(res);
+        //console.log(res.getbody());
+        fetchGetTeachers();
+    }
+
+    document.getElementById("btnCreate").onclick = function () {
+        let newTeacher = {
+            id: 0,
+            name: document.getElementById("newTeacherName").value
+        };
+
+        fetch("/api/teachers", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: JSON.stringify(newTeacher)
+        })
+            .then(response => response.json())
+            .then(json => serverResponseAddTeacher(json))
+            .catch((ex) => { // обрабатываем возможную ошибку
+                console.log("Error: " + ex.message);
+                console.log("Response: " + ex.response);
+            });
+        document.getElementById("newTeacherName").value = "";
+
+    }
+
+
+    // Построение страницы по результатам ответа от сервера 
+    function renderTeachersList(json) {
+
+        console.log ("Get From Server: ")
+        console.log(json);
+        console.log(json.length);
+
+        // Очищу main
+        let mainTeachers = document.getElementById("mainTeachers");
+        mainTeachers.innerHTML = "";
+
+        // создам ul
+        let ul = document.createElement("ul");
+
+        // Создам коллекцию элементов li и внедрю ее в ul
+        for (let i = 0; i < json.length; i++) {
+            // console.log(i);
+            let li = document.createElement("li");
+            li.innerText = json[i].name;
+            li.className = json[i].id;
+
+            // Редактирование
+            li.ondblclick = function () {
+                let id = this.className;
+                let name = this.innerText;
+                this.innerHTML = "";
+
+                // поле id
+                let inId = document.createElement("input");
+                inId.type = "hidden";
+                inId.id = "editNowId";
+                inId.value = id;
+                this.appendChild(inId);
+
+                // поле имя
+                let inName = document.createElement("input");
+                inName.type = "text";
+                inName.id = "editNowName";
+                inName.value = name;
+                this.appendChild(inName);
+
+                // Кнопка сохранить
+                let btnSave = document.createElement("input");
+                btnSave.type = "button";
+                btnSave.value = "Save";
+                btnSave.onclick = function () {
+                    let id = document.getElementById("editNowId").value;
+                    let name = document.getElementById("editNowName").value;
+
+                    fetch("/api/teachers/" + id, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                            // 'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: JSON.stringify({
+                            id: id,
+                            name: name
+                        })
+
+                    })
+                        .then(fetchGetTeachers)
+                        .catch((ex) => { // обрабатываем возможную ошибку
+                            console.log("Error: " + ex.message);
+                            console.log("Response: " + ex.response);
+                        });
+
+                }
+                this.appendChild(btnSave);
+
+                // Кнопка отмены
+                let btnCancel = document.createElement("input");
+                btnCancel.type = "button";
+                btnCancel.value = "Cancel";
+                btnCancel.onclick = function () {
+
+
+                }
+                this.appendChild(btnCancel);
+
+            }
+
+            // Удаление
+            let span = document.createElement("span");
+            span.innerText = "-";
+            span.className = json[i].id;
+            span.onclick = function () {
+                fetch("/api/teachers/" + this.className, {
+                    method: 'DELETE'
+                })
+                    .then(fetchGetTeachers)
+                    .catch((ex) => { // обрабатываем возможную ошибку
+                        console.log("Error: " + ex.message);
+                        console.log("Response: " + ex.response);
+                });
+            }
+
+
+
+            li.appendChild(span);
+
+            ul.appendChild(li);
+        }
+
+        // Внедрю коллекцию в нужный section
+        mainTeachers.appendChild(ul);
+    }
+
+    // Выполнение запроса к серверу
+    function fetchGetTeachers() {
+
+        fetch("/api/teachers") // Пошлем запрос GET (по умолчанию) по марштуру на сервер
+            .then(response => response.json()) // Преобразуем ответ в json
+            .then(json => renderTeachersList(json)) // Передадим данные в метод
+            .catch((ex) => { // обрабатываем возможную ошибку
+                console.log("Error: " + ex.message);
+                console.log("Response: " + ex.response);
+            });
+    }
+
+    fetchGetTeachers();
+
+</script>

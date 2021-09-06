@@ -3,3 +3,7 @@
 ################################################################################
 
 /WebApplicationCoreNet5/bin/Debug/net5.0
+/WebApplicationCoreNet5/obj
+/WebApplicationCore_3/.vs/WebApplicationCore_3
+/WebApplicationCore_3/obj
+/WebUserAjax/.vs/WebUserAjax
